@@ -225,3 +225,23 @@ button:hover {
     border-color: #1d4ed8;
     color: #ffffff;
 }
+
+/* =========================================================
+   6. STATUS BANNER & HELPER CLASSES
+   ========================================================= */
+/* Alert message box styling */
+.status {
+    max-width: 980px;
+    margin: 15px auto 0;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.status.success { background: #dcfce7; color: #166534; }
+.status.error { background: #fee2e2; color: #991b1b; }
+
+/* Muted helper text and element hide utility */
+.muted { color: #6b7280; font-size: 14px; }
+.hidden { display: none; }
