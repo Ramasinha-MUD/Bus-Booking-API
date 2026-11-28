@@ -81,3 +81,98 @@ async function loadLocations() {
         showStatus("Locations load error: " + err.message, "error");
     }
 }
+
+// =========================================================================
+// 4. LOAD & SEARCH BUS SCHEDULES (GET /GetBusSchedules)
+// =========================================================================
+// Fetches and displays all available bus schedules without filtering
+async function loadAllBuses() {
+    try {
+        const res = await apiCall("/GetBusSchedules");
+        renderBuses(toArray(res));
+    } catch (err) {
+        showStatus("Buses load error: " + err.message, "error");
+    }
+}
+
+// Filters bus schedules based on the selected "From" and "To" city names
+async function searchBuses() {
+    const fromId = document.getElementById("fromLoc").value;
+    const toId = document.getElementById("toLoc").value;
+
+    const selectedFromName = (locationNames[fromId] || "").trim().toLowerCase();
+    const selectedToName = (locationNames[toId] || "").trim().toLowerCase();
+
+    // If neither location is selected, show all schedules
+    if (!selectedFromName && !selectedToName) {
+        return loadAllBuses();
+    }
+
+    try {
+        const allRes = await apiCall("/GetBusSchedules");
+        let buses = toArray(allRes);
+
+        // Filter schedules matching the chosen departure and arrival cities
+        buses = buses.filter(bus => {
+            const busFromName = (
+                bus.fromLocationName ||
+                bus.fromCity ||
+                locationNames[bus.fromLocation] ||
+                ""
+            ).trim().toLowerCase();
+
+            const busToName = (
+                bus.toLocationName ||
+                bus.toCity ||
+                locationNames[bus.toLocation] ||
+                ""
+            ).trim().toLowerCase();
+
+            const matchFrom = !selectedFromName || busFromName === selectedFromName;
+            const matchTo = !selectedToName || busToName === selectedToName;
+
+            return matchFrom && matchTo;
+        });
+
+        renderBuses(buses);
+    } catch (err) {
+        showStatus("Search error: " + err.message, "error");
+    }
+}
+
+// Renders bus schedule cards into the DOM
+function renderBuses(buses) {
+    const container = document.getElementById("busResults");
+    if (!buses.length) {
+        container.innerHTML = `<p class="muted">No buses found for this route.</p>`;
+        return;
+    }
+
+    container.innerHTML = "";
+    buses.forEach(bus => {
+        const id = bus.scheduleId || bus.id;
+        const fromText = bus.fromLocationName || bus.fromCity || locationNames[bus.fromLocation] || `Location ${bus.fromLocation}`;
+        const toText = bus.toLocationName || bus.toCity || locationNames[bus.toLocation] || `Location ${bus.toLocation}`;
+        const fare = bus.price || 500;
+        const seats = bus.totalSeats || 32;
+
+        // Serialize bus data to pass into the openSeats() click handler
+        const busData = JSON.stringify({
+            id,
+            name: bus.busName || "Express Bus",
+            fromText,
+            toText,
+            fare,
+            seats
+        });
+
+        container.innerHTML += `
+            <div class="box-item">
+                <h3>${bus.busName || "Express Bus"} (${bus.busVehicleNo || "N/A"})</h3>
+                <p><strong>Route:</strong> ${fromText} ➝ ${toText}</p>
+                <p><strong>Fare:</strong> Rs. ${fare} | <strong>Seats:</strong> ${seats}</p>
+                <button class="btn-blue" onclick='openSeats(${busData})'>Select Seats</button>
+            </div>
+        `;
+    });
+}
