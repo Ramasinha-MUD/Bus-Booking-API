@@ -51,3 +51,33 @@ async function apiCall(path, method = "GET", body = null) {
     }
     return parsed;
 }
+
+// =========================================================================
+// 3. LOAD LOCATIONS (GET /GetBusLocations)
+// =========================================================================
+// Fetches all available bus locations and populates the "From" and "To" dropdown menus
+async function loadLocations() {
+    try {
+        const res = await apiCall("/GetBusLocations");
+        const list = toArray(res);
+
+        const fromSelect = document.getElementById("fromLoc");
+        const toSelect = document.getElementById("toLoc");
+        fromSelect.innerHTML = `<option value="">From Location</option>`;
+        toSelect.innerHTML = `<option value="">To Location</option>`;
+        locationNames = {};
+
+        // Loop through locations, store ID-to-Name mapping, and create <option> elements
+        list.forEach(item => {
+            const id = item.locationId || item.id;
+            const name = item.locationName || item.name;
+            if (!id || !name) return;
+
+            locationNames[id] = name;
+            fromSelect.innerHTML += `<option value="${id}">${name}</option>`;
+            toSelect.innerHTML += `<option value="${id}">${name}</option>`;
+        });
+    } catch (err) {
+        showStatus("Locations load error: " + err.message, "error");
+    }
+}
