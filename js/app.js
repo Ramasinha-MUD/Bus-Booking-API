@@ -176,3 +176,60 @@ function renderBuses(buses) {
         `;
     });
 }
+
+// =========================================================================
+// 5. SEAT MAP & SELECTION (GET /getBookedSeats)
+// =========================================================================
+// Opens the seat booking panel, fetches already booked seats, and renders interactive seat boxes
+async function openSeats(bus) {
+    activeBus = bus;
+    pickedSeats = [];
+
+    document.getElementById("bookingSection").classList.remove("hidden");
+    document.getElementById("selectedBusName").textContent = `${bus.name} (${bus.fromText} ➝ ${bus.toText})`;
+    document.getElementById("seatFare").textContent = bus.fare;
+    updateSeatSummary();
+
+    // Fetch already reserved seat numbers for this schedule from the API
+    let booked = [];
+    try {
+        const res = await apiCall(`/getBookedSeats?shceduleId=${bus.id}`);
+        booked = toArray(res).map(x => Number(x.seatNo || x));
+    } catch (e) {}
+
+    const grid = document.getElementById("seatsContainer");
+    grid.innerHTML = "";
+
+    // Generate seat elements from 1 to total seats
+    for (let i = 1; i <= bus.seats; i++) {
+        const isBooked = booked.includes(i);
+        const seat = document.createElement("div");
+        seat.className = `seat ${isBooked ? "booked" : ""}`;
+        seat.textContent = i;
+
+        // Allow toggling selection only if the seat is not already booked
+        if (!isBooked) {
+            seat.onclick = () => {
+                if (pickedSeats.includes(i)) {
+                    pickedSeats = pickedSeats.filter(n => n !== i);
+                    seat.classList.remove("picked");
+                } else {
+                    pickedSeats.push(i);
+                    seat.classList.add("picked");
+                }
+                updateSeatSummary();
+            };
+        }
+        grid.appendChild(seat);
+    }
+
+    // Smoothly scroll down to the seat selection panel
+    document.getElementById("bookingSection").scrollIntoView({ behavior: "smooth" });
+}
+
+// Updates the selected seat numbers and total ticket price calculation in the UI
+function updateSeatSummary() {
+    const sorted = [...pickedSeats].sort((a, b) => a - b);
+    document.getElementById("pickedSeatsText").textContent = sorted.length ? sorted.join(", ") : "None";
+    document.getElementById("totalFareText").textContent = sorted.length * (activeBus ? activeBus.fare : 0);
+}
