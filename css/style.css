@@ -11,7 +11,7 @@
 
 /* Set full-screen fixed background image and base text color */
 body {
-    background: url("../assets/image/Gemini_Generated_Image_aowv92aowv92aowv.jpg") no-repeat center center fixed;
+    background: url("../assets/Gemini_Generated_Image_aowv92aowv92aowv.jpg") no-repeat center center fixed;
     background-size: cover;
     color: #111827;
     position: relative;
