@@ -8,7 +8,97 @@
     
 </head>
 <body>
-    
+    <!--Top Header Section-->
+    <header class="header">
+        <h1>🚌 Bus Booking System</h1>
+        <p>Search routes, select seats, and book tickets via REST API</p>
+    </header>
+
+    <!-- Notification banner for success and error messages -->
+    <div id="statusBox" class="status hidden"></div>
+
+    <main class="container">
+
+        <!-- Step 1: Search Buses SECTION-->
+        <section class="card">
+            <h2>1. Search Buses</h2>
+            <div class="row-form">
+                <!-- Departure city dropdown (populated via API) -->
+                <select id="fromLoc">
+                    <option value="">From Location</option>
+                </select>
+
+                <!-- Destination city dropdown (populated via API) -->
+                <select id="toLoc">
+                    <option value="">To Location</option>
+                </select>
+
+                <!-- Travel date picker -->
+                <input type="date" id="travelDate">
+
+                <!-- Filter and load all bus schedule buttons -->
+                <button id="searchBtn" class="btn-blue">Search</button>
+                <button id="showAllBtn" class="btn-gray">Show All</button>
+            </div>
+        </section>
+
+        <!-- Step 2: AVAILABLE BUSES RESULTS SECTION -->
+        <section class="card">
+            <h2>2. Available Buses</h2>
+            <!-- Bus schedule cards are dynamically rendered here -->
+            <div id="busResults" class="grid">
+                <p class="muted">Loading buses...</p>
+            </div>
+        </section>
+
+        <!-- Step 3: Seat Selection & Booking FORM SECTION -->
+        <section id="bookingSection" class="card hidden">
+            <h2>3. Select Seats — <span id="selectedBusName"></span></h2>
+            <p class="fare-text">Price per seat: <strong>Rs. <span id="seatFare">0</span></strong></p>
+
+            <!-- Color legend for seat availability states -->
+            <div class="legend">
+                <span><i class="box free"></i> Available</span>
+                <span><i class="box booked"></i> Booked</span>
+                <span><i class="box picked"></i> Selected</span>
+            </div>
+
+            <!-- Interactive seat grid container -->
+            <div id="seatsContainer" class="seats-grid"></div>
+
+            <p class="summary-text">
+                Selected Seats: <strong id="pickedSeatsText">None</strong> |
+                Total: <strong>Rs. <span id="totalFareText">0</span></strong>
+            </p>
+
+            <!-- Passenger details form to confirm the booking -->
+            <form id="bookingForm" class="row-form">
+                <input type="text" id="pName" placeholder="Passenger Name" required>
+                <input type="number" id="pAge" placeholder="Age" min="1" max="100" required>
+                <select id="pGender">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+                <button type="submit" class="btn-green">Book Now</button>
+                <button type="button" id="cancelPickBtn" class="btn-red">Cancel</button>
+            </form>
+        </section>
+
+        <!-- Step 4: MY BOOKINGS LIST SECTION -->
+        <section class="card">
+            <div class="card-top">
+                <h2>4. My Bookings</h2>
+                <!-- Reloads bookings from API and local state -->
+                <button id="reloadBookingsBtn" class="btn-gray">Refresh</button>
+            </div>
+            <!-- Booked ticket cards are dynamically rendered here -->
+            <div id="bookingsContainer" class="grid">
+                <p class="muted">Loading bookings...</p>
+            </div>
+        </section>
+
+    </main>
+
     <script src="js/app.js"></script>
 </body>
 </html>
