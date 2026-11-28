@@ -233,3 +233,157 @@ function updateSeatSummary() {
     document.getElementById("pickedSeatsText").textContent = sorted.length ? sorted.join(", ") : "None";
     document.getElementById("totalFareText").textContent = sorted.length * (activeBus ? activeBus.fare : 0);
 }
+
+// =========================================================================
+// 6. SUBMIT & MANAGE BOOKINGS (POST /PostBusBooking, GET & DELETE)
+// =========================================================================
+// Retrieve locally saved bookings from browser localStorage
+let localBookings = JSON.parse(localStorage.getItem("lanka_bus_bookings") || "[]");
+
+// Submits passenger and seat details to the API and saves a local copy
+async function handleBooking(e) {
+    e.preventDefault();
+    if (!pickedSeats.length) {
+        showStatus("Please select at least one seat!", "error");
+        return;
+    }
+
+    const passengerName = document.getElementById("pName").value.trim();
+    const age = Number(document.getElementById("pAge").value);
+    const gender = document.getElementById("pGender").value;
+    const seatsCopy = [...pickedSeats].sort((a, b) => a - b);
+
+    // Construct request payload matching the API's expected schema
+    const payload = {
+        bookingId: 0,
+        custId: 1,
+        bookingDate: new Date().toISOString(),
+        scheduleId: activeBus.id,
+        BusBookingPassengers: seatsCopy.map(seatNo => ({
+            passengerId: 0,
+            bookingId: 0,
+            passengerName: passengerName,
+            age: age,
+            gender: gender,
+            seatNo: seatNo
+        }))
+    };
+
+    let apiBookingId = Date.now();
+
+    // Send booking request to the backend API
+    try {
+        const apiRes = await apiCall("/PostBusBooking", "POST", payload);
+        const created = apiRes?.data || apiRes;
+        if (created?.bookingId || created?.id) {
+            apiBookingId = created.bookingId || created.id;
+        }
+        showStatus("Booking confirmed via API!");
+    } catch (err) {
+        showStatus("API note: " + err.message + " (Saved in My Bookings list)", "error");
+    }
+
+    // Save complete passenger & trip details in localStorage for reliable display
+    const bookingRecord = {
+        bookingId: apiBookingId,
+        busName: activeBus.name,
+        route: `${activeBus.fromText} ➝ ${activeBus.toText}`,
+        date: document.getElementById("travelDate").value || new Date().toISOString().split("T")[0],
+        passengerName: passengerName,
+        age: age,
+        gender: gender,
+        seats: seatsCopy,
+        totalFare: seatsCopy.length * activeBus.fare
+    };
+
+    localBookings.unshift(bookingRecord);
+    localStorage.setItem("lanka_bus_bookings", JSON.stringify(localBookings));
+
+    // Reset UI and refresh the bookings list
+    document.getElementById("bookingSection").classList.add("hidden");
+    document.getElementById("bookingForm").reset();
+    pickedSeats = [];
+    loadBookings();
+}
+
+// Fetches bookings from the API, merges them with localStorage details, and renders cards
+async function loadBookings() {
+    const container = document.getElementById("bookingsContainer");
+    let apiList = [];
+
+    try {
+        const res = await apiCall("/GetAllBusBookings");
+        apiList = toArray(res);
+    } catch (err) {
+        // Fallback silently to localStorage if API request fails
+    }
+
+    // Merge local records and API records using bookingId as the unique key
+    const mergedMap = new Map();
+
+    localBookings.forEach(item => {
+        mergedMap.set(String(item.bookingId), item);
+    });
+
+    apiList.forEach(b => {
+        const id = String(b.bookingId || b.id);
+        const existing = mergedMap.get(id);
+        const passengers = b.BusBookingPassengers || b.busBookingPassengers || [];
+        const firstPass = passengers[0] || {};
+
+        mergedMap.set(id, {
+            bookingId: b.bookingId || b.id,
+            busName: existing?.busName || b.busName || `Schedule #${b.scheduleId}`,
+            route: existing?.route || "",
+            date: existing?.date || (b.bookingDate ? new Date(b.bookingDate).toLocaleDateString() : "N/A"),
+            passengerName: existing?.passengerName || firstPass.passengerName || b.passengerName || "Passenger",
+            age: existing?.age || firstPass.age || "-",
+            gender: existing?.gender || firstPass.gender || "-",
+            seats: existing?.seats || passengers.map(p => p.seatNo).filter(Boolean),
+            totalFare: existing?.totalFare || null
+        });
+    });
+
+    const finalList = Array.from(mergedMap.values());
+
+    if (!finalList.length) {
+        container.innerHTML = `<p class="muted">No bookings found.</p>`;
+        return;
+    }
+
+    // Render up to 12 most recent booking cards
+    container.innerHTML = "";
+    finalList.slice(0, 12).forEach(b => {
+        const seatsText = b.seats && b.seats.length ? b.seats.join(", ") : "N/A";
+        const fareText = b.totalFare ? `<p><strong>Total Fare:</strong> Rs. ${b.totalFare}</p>` : "";
+        const routeText = b.route ? `<p><strong>Route:</strong> ${b.route}</p>` : "";
+
+        container.innerHTML += `
+            <div class="box-item">
+                <h3>Booking #${b.bookingId} — ${b.passengerName}</h3>
+                <p><strong>Bus:</strong> ${b.busName}</p>
+                ${routeText}
+                <p><strong>Age / Gender:</strong> ${b.age} yrs (${b.gender})</p>
+                <p><strong>Seats:</strong> ${seatsText} | <strong>Date:</strong> ${b.date}</p>
+                ${fareText}
+                <button class="btn-red" onclick="deleteBooking(${b.bookingId})">Cancel Ticket</button>
+            </div>
+        `;
+    });
+}
+
+// Cancels a booking via DELETE API endpoint and removes it from localStorage
+async function deleteBooking(id) {
+    if (!confirm(`Cancel Booking #${id}?`)) return;
+    try {
+        await apiCall(`/DeleteBusBooking?id=${id}`, "DELETE");
+    } catch (err) {
+        // Proceed with local removal even if API record is missing
+    }
+
+    localBookings = localBookings.filter(item => String(item.bookingId) !== String(id));
+    localStorage.setItem("lanka_bus_bookings", JSON.stringify(localBookings));
+    showStatus(`Booking #${id} cancelled!`);
+    loadBookings();
+}
+
