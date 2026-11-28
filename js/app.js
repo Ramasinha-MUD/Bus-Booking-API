@@ -387,3 +387,20 @@ async function deleteBooking(id) {
     loadBookings();
 }
 
+// =========================================================================
+// 7. EVENT LISTENERS & INITIALIZATION
+// =========================================================================
+// Attach click and submit event listeners to UI buttons and forms
+document.getElementById("searchBtn").addEventListener("click", searchBuses);
+document.getElementById("showAllBtn").addEventListener("click", loadAllBuses);
+document.getElementById("bookingForm").addEventListener("submit", handleBooking);
+document.getElementById("cancelPickBtn").addEventListener("click", () => document.getElementById("bookingSection").classList.add("hidden"));
+document.getElementById("reloadBookingsBtn").addEventListener("click", loadBookings);
+
+// Initialize the application once the HTML document has fully loaded
+window.addEventListener("DOMContentLoaded", async () => {
+    document.getElementById("travelDate").valueAsDate = new Date();
+    await loadLocations(); // Populate city dropdowns
+    await loadAllBuses(); // Display all available buses
+    await loadBookings(); // Load existing bookings
+});
