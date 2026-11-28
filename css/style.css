@@ -119,3 +119,38 @@ button:hover {
 .btn-gray { background: #4b5563; }
 .btn-green { background: #16a34a; }
 .btn-red { background: #dc2626; }
+
+/* =========================================================
+   4. BUS & BOOKING CARDS GRID
+   ========================================================= */
+/* Responsive card grid for available buses and booked tickets */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 14px;
+}
+
+/* Individual card item for a bus schedule or booking */
+.box-item {
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #2563eb;
+    border-radius: 8px;
+    padding: 14px;
+    background: #f9fafb;
+}
+
+.box-item h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.box-item p {
+    font-size: 14px;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.box-item button {
+    margin-top: 10px;
+    width: 100%;
+}
