@@ -79,3 +79,43 @@ body::before {
     align-items: center;
     margin-bottom: 12px;
 }
+
+/* =========================================================
+   3. FORMS, INPUTS & BUTTONS
+   ========================================================= */
+/* Responsive grid layout for search filters, forms, and action buttons */
+.row-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+}
+
+/* Input and select field styling */
+input, select {
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 100%;
+}
+
+/* Shared button styling and hover state */
+button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* Button color themes */
+.btn-blue { background: #2563eb; }
+.btn-gray { background: #4b5563; }
+.btn-green { background: #16a34a; }
+.btn-red { background: #dc2626; }
